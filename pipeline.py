@@ -1,5 +1,6 @@
 import argparse
 # default
+global in0, in1, sip8, delay, out
 in0 = 23000
 in1 = 46000
 sip8 = 72000
@@ -7,7 +8,7 @@ delay = 7000
 out = 11000
 
 cycles = {'in0':in0, 'in1':in1, 'sip8':sip8, 'delay':delay, 'out':out}
-group = {'in0':0, 'in1':1, 'sip8':2, 'delay':3, 'out':1} 
+group = {'in0':0, 'in1':1, 'sip8':2, 'delay':3, 'out':1}
 N = 10000
 stream1 = []
 stream2 = []
@@ -26,7 +27,7 @@ total_time = 2 * N * ( cycles['in0'] + cycles['in1'] + cycles['sip8'] + cycles['
 #print(total_time)
 
 def simulate():
-    pipelined_time = 0  
+    pipelined_time = 0
     last = True
     exe1 = []
     exe2 = []

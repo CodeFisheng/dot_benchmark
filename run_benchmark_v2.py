@@ -21,7 +21,7 @@ new_sip_launch_rate = 0.5 * sip_launch_rate #cycles/fpcnt
 # variables
 # constant parameters
 global freq
-freq = 1.2*1024*1024 # cycles/second
+freq = 1.2 # cycles/second
 cluster_buffer_size_limit = 2*1024*1024*byte_size #bytes cbuffer limit 2MB
 sip_buffer_size_limit = 240*1024*byte_size #bytes sip_buffer limit 240KB
 
@@ -50,61 +50,54 @@ def calc_sip_launch(fp_cnt):
     return fp_cnt * new_sip_launch_rate + 7000
     # return 4500 + 7000
 
-def run(M, K, N, cqm=1, cdma=1, show=False):
+def run(M, K, N, args):
     global time_space
     time_space = (time_space_min + time_space_max) / 2 #cycles
-
+    cluster_buffer_size_limit = 2*1024*1024 #bytes cbuffer limit 2MB
+    klen = (cluster_buffer_size_limit - M * N * 4)  / (4 * M + 4 * N)
+    if klen < 32:
+        return 0
+    # print('M = ', M, '; N = ', N)
+    # print("k_block_length = ", klen)
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
-    iters = M/32/4 # 2 blocks, 32*2048, 2048*64, 32*1024*32
-    M_each = M/iters
-    fp_cnt_total = 2 * M * K * N
-    fp_cnt_each = 2 * M_each * K * N
-    time_space = time_space
-    in0 = calc_cdma_linear(M_each, K)
-    in1 = calc_cdma_linear(K, N)
-    out = calc_cdma_linear(M_each, N)
-    launch8 = calc_sip_launch(fp_cnt_each)
+
+    fp_cnt_block = 2 * M * klen * N
+    in0 = calc_cdma_linear(M, klen)
+    in1 = calc_cdma_linear(klen, N)
+    out = calc_cdma_linear(M, N)
+    sip8 = calc_sip_launch(fp_cnt_block)
     delay = (CQM_gap_cnt-2) * time_space
-
-    if M_each * K * byte_size + K * N * byte_size > cluster_buffer_size_limit:
-        print("case over size limit")
-        return 0;
-    if cqm != 1:
+    if args.cqm:
         time_space /= args.cqm
-
-    if cdma != 1:
-         in0 /= args.cdma
-         in1 /= args.cdma
-         out /= args.cdma
+    if args.cdma:
+        in0 /= args.cdma
+        in1 /= args.cdma
+        out /= args.cdma
     # TODO, corrected, I forgot 1/64
-    each_cycles = in0 + launch8 + (CQM_gap_cnt-2) * time_space + out
-    total_cycles = iters * each_cycles + paraminit + 2 * time_space + calc_cdma_linear(K, N)
-    if show == True:
+    cycles = in0 + in1 + sip8 + delay + out
+
+    if args.show and args.show == 1:
+        print("calculation is averaged over 2048*2048 X 2048*64\n")
         print("in0[32, 2048] with 4 blocks, cdma linear copy from hbm to cluster, \n\
-            take = ", calc_cdma_linear(M_each, K), " cycles\n")
+            take = ", calc_cdma_linear(M, klen), " cycles\n")
         print("in1[2048, 64], cdma linear copy from hbm to cluster, \n\
-            take = ", calc_cdma_linear(K, N)/iters, " cycles\n")
+            take = ", calc_cdma_linear(klen, N), " cycles\n")
         print("launch8 for matrix 32*1024 X 1024*64 \ntakes: ", \
-            calc_sip_launch(fp_cnt_each), " cycles\n")
+            calc_sip_launch(fp_cnt_block), " cycles\n")
         print("average delay in CQM vector align takes: ", time_space, \
             " cycles ; total cycles = ", \
-            (CQM_gap_cnt-2) * time_space + time_space * 2 / iters, "\n")
+            (CQM_gap_cnt-2) * time_space, "\n")
         print("out[32, 64], cdma linear copy from cluster to hbm, \ntake = ", \
-            calc_cdma_linear(M_each, N), " cycles\n")
-
-        print("each cycles is: ", each_cycles)
-        print("total cycles is: ", total_cycles, \
-            ", for data size 32*2048 X 2048*64\n")
-    #TODO, just one loop, is it OK
-    # print("total calculation FP is: ", fp_cnt_total, " float point operations\n")
+            calc_cdma_linear(M, N), " cycles\n")
+        print("each cycles is: ", cycles)
 
     # TODO, need 4 bytes or not
     # 4 cores
-    total_cap = (1.35/1.2) * 4 * fp_cnt_total * freq / total_cycles / 1024 / 1024 / 1024
+    total_cap = (1.35/1.2) * 4 * fp_cnt_block * freq / cycles / 1000
     # print("[freq correction] \ncalculation capability = ", total_cap, " TFlops")
 
-    pipeline_rate = pipeline(in0, in1, launch8, delay, out)
-    print("pipeline rate = ", pipeline_rate)
+    pipeline_rate = pipeline(in0, in1, sip8, delay, out)
+    # print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     # print("final calculation capacity after pipeline: ", pipelined_total_cap)
     return pipelined_total_cap
@@ -202,42 +195,31 @@ def pipeline(in0, in1, sip8, delay, out):
         pipelined_time += cycles[exe]
     print('pipeline rate = ', total_time/pipelined_time, '\n')
     return total_time/pipelined_time
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--show', type = None, help = 'display integer')
-    parser.add_argument('--cqm', type = float, help = 'cqm efficiency improvement')
-    parser.add_argument('--cdma', type = float, help = 'cdma efficiency improvement')
+    parser.add_argument("--show", type = int, help = 'display integer')
+    parser.add_argument("--cqm", type = float, help = 'cqm improvement rate')
+    parser.add_argument("--cdma", type = float, help = 'cdma improvement rate')
     args = parser.parse_args()
+    # M_list = [128, 256, 384, 512, 640, 768, 896, 1024, 1024]
+    # N_list = [128, 256, 384, 512, 640, 768, 896, 1024, 16]
 
-    show = False
-    cqm = 1.0
-    cdma = 1.0
-    if args.show:
-        show = True
-    if args.cqm:
-        cqm = args.cqm
-    if args.cdma:
-        cdma = args.cdma
-
+    # for M in M_list:
+    #     for N in N_list:
+    #         run(M, N, args)
     dataset = np.array(pd.read_csv('DeepBench_NV_V100.csv'))
     result = []
     failres = []
     for i in dataset:
-        cap = run(i[0], i[2], i[1], cqm, cdma, show)
+        cap = run(i[0], i[2], i[1], args)
         if cap == 0:
-            tmp = [i[0], i[2], i[1], cqm, cdma, i[4], cap]
+            tmp = [i[0], i[2], i[1], args]
             failres.append(tmp)
             continue
-        tmp = [i[0], i[2], i[1], cqm, cdma, i[4], cap]
+        tmp = [i[0], i[2], i[1], i[4], cap]
         result.append(tmp)
         print("M = ",i[0], " N = ", i[2], " K = ",i[1])
         print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
-
-    #failres = np.array(failres)
-    #df = pd.DataFrame({'M':failres[:,0], 'N':failres[:,1],\
-    #    'K':failres[:,2], 'NV_bench':failres[:,4], 'Leo_bench':failres[:,5]})
-    #sio = StringIO()
-    #df.to_csv(sio, columns = ['M', 'N', 'K', 'NV_benchmark', 'Leo_benchmark'])
-    #pd.DataFrame(result)to_csv('DeepBench_enflame_passcases.csv', header = ['M', 'N', 'K', 'NV_benchmark', 'Leo_benchmark'])
-    pd.DataFrame(result).to_csv('DeepBench_enflame_passes.csv', header = 1, index = 0)
-    pd.DataFrame(failres).to_csv('DeepBench_enflame_failures.csv', header = 1, index = 0)
+    pd.DataFrame(result).to_csv('DeepBench_enflame_passes_large.csv', header = 1, index = 0)
+    pd.DataFrame(failres).to_csv('DeepBench_enflame_failures_large.csv', header = 1, index = 0)
