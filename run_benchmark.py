@@ -50,12 +50,12 @@ def calc_sip_launch(fp_cnt):
     return fp_cnt * new_sip_launch_rate + 7000
     # return 4500 + 7000
 
-def run(M, K, N, cqm=1, cdma=1, show=False):
+def run(kkk, M, K, N, cqm=1, cdma=1, show=False):
     global time_space
     time_space = (time_space_min + time_space_max) / 2 #cycles
 
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
-    iters = M/32/4 # 2 blocks, 32*2048, 2048*64, 32*1024*32
+    iters = M/32/kkk # 2 blocks, 32*2048, 2048*64, 32*1024*32
     M_each = M/iters
     fp_cnt_total = 2 * M * K * N
     fp_cnt_each = 2 * M_each * K * N
@@ -68,7 +68,7 @@ def run(M, K, N, cqm=1, cdma=1, show=False):
 
     if M_each * K * byte_size + K * N * byte_size > cluster_buffer_size_limit:
         print("case over size limit")
-        return 0;
+        return [0, 0];
     if cqm != 1:
         time_space /= args.cqm
 
@@ -103,15 +103,18 @@ def run(M, K, N, cqm=1, cdma=1, show=False):
     total_cap = (1.35/1.2) * 4 * fp_cnt_total * freq / total_cycles / 1024 / 1024 / 1024
     # print("[freq correction] \ncalculation capability = ", total_cap, " TFlops")
 
-    pipeline_rate = pipeline(in0, in1, launch8, delay, out)
+    pipeline_rate1 = pipeline(in0, in1, launch8, delay, out, 0, 0, 1)
+    pipeline_rate2 = pipeline(in0, in1, launch8, delay, out, 0, 1, 0)
+    pipeline_rate3 = pipeline(in0, in1, launch8, delay, out, 1, 0, 0)
+    pipeline_rate = max( pipeline_rate1, max( pipeline_rate2, pipeline_rate3) )
     print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     # print("final calculation capacity after pipeline: ", pipelined_total_cap)
-    return pipelined_total_cap
+    return [pipeline_rate, pipelined_total_cap]
 
-def pipeline(in0, in1, sip8, delay, out):
+def pipeline(in0, in1, sip8, delay, out, in0c, in1c, outc):
     cycles = {'in0':in0, 'in1':in1, 'sip8':sip8, 'delay':delay, 'out':out}
-    group = {'in0':0, 'in1':1, 'sip8':2, 'delay':3, 'out':1}
+    group = {'in0':in0c, 'in1':in1c, 'sip8':2, 'delay':3, 'out':outc}
     N = 10000
     stream1 = []
     stream2 = []
@@ -200,7 +203,6 @@ def pipeline(in0, in1, sip8, delay, out):
     while stream2:
         exe = stream2.pop(0)
         pipelined_time += cycles[exe]
-    print('pipeline rate = ', total_time/pipelined_time, '\n')
     return total_time/pipelined_time
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -223,15 +225,19 @@ if __name__ == "__main__":
     result = []
     failres = []
     for i in dataset:
-        cap = run(i[0], i[2], i[1], cqm, cdma, show)
-        if cap == 0:
-            tmp = [i[0], i[2], i[1], cqm, cdma, i[4], cap]
+        [pipe1, cap1] = run(4, i[0], i[2], i[1], cqm, cdma, show)
+        [pipe2, cap2] = run(8, i[0], i[2], i[1], cqm, cdma, show)
+        if cap2 == 0 and cap1 == 0:
+            tmp = [i[0], i[2], i[1], pipe1, i[4], cap1]
             failres.append(tmp)
             continue
-        tmp = [i[0], i[2], i[1], cqm, cdma, i[4], cap]
+        if cap2 > cap1:
+            tmp = [i[0], i[2], i[1], pipe2, i[4], cap2]
+        if cap2 < cap1:
+            tmp = [i[0], i[2], i[1], pipe1, i[4], cap1]
         result.append(tmp)
-        print("M = ",i[0], " N = ", i[2], " K = ",i[1])
-        print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
+        #print("M = ",i[0], " N = ", i[2], " K = ",i[1])
+        #print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
 
     #failres = np.array(failres)
     #df = pd.DataFrame({'M':failres[:,0], 'N':failres[:,1],\

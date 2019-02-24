@@ -56,7 +56,7 @@ def run(M, K, N, args):
     cluster_buffer_size_limit = 2*1024*1024 #bytes cbuffer limit 2MB
     klen = (cluster_buffer_size_limit - M * N * 4)  / (4 * M + 4 * N)
     if klen < 32:
-        return 0
+        return [0, 0]
     # print('M = ', M, '; N = ', N)
     # print("k_block_length = ", klen)
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
@@ -96,15 +96,19 @@ def run(M, K, N, args):
     total_cap = (1.35/1.2) * 4 * fp_cnt_block * freq / cycles / 1000
     # print("[freq correction] \ncalculation capability = ", total_cap, " TFlops")
 
-    pipeline_rate = pipeline(in0, in1, sip8, delay, out)
+    pipeline_rate1 = pipeline(in0, in1, sip8, delay, out, 0, 0, 1)
+    pipeline_rate2 = pipeline(in0, in1, sip8, delay, out, 0, 1, 0)
+    pipeline_rate3 = pipeline(in0, in1, sip8, delay, out, 1, 0, 0)
+    pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
+    print('pipeline rate = ', pipeline_rate, '\n')
     # print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     # print("final calculation capacity after pipeline: ", pipelined_total_cap)
-    return pipelined_total_cap
+    return [pipeline_rate, pipelined_total_cap]
 
-def pipeline(in0, in1, sip8, delay, out):
+def pipeline(in0, in1, sip8, delay, out, in0c, in1c, outc):
     cycles = {'in0':in0, 'in1':in1, 'sip8':sip8, 'delay':delay, 'out':out}
-    group = {'in0':0, 'in1':1, 'sip8':2, 'delay':3, 'out':1}
+    group = {'in0':in0c, 'in1':in1c, 'sip8':2, 'delay':3, 'out':outc}
     N = 10000
     stream1 = []
     stream2 = []
@@ -193,7 +197,6 @@ def pipeline(in0, in1, sip8, delay, out):
     while stream2:
         exe = stream2.pop(0)
         pipelined_time += cycles[exe]
-    print('pipeline rate = ', total_time/pipelined_time, '\n')
     return total_time/pipelined_time
 
 if __name__ == "__main__":
@@ -212,14 +215,41 @@ if __name__ == "__main__":
     result = []
     failres = []
     for i in dataset:
-        cap = run(i[0], i[2], i[1], args)
+        tmp_m = min(i[0], 2048)
+        tmp_n = min(i[1], 2048)
+        m_remain = tmp_m % 128
+        m_times = int((tmp_m) / 128)
+        n_remain = tmp_n % 16
+        n_times = int((tmp_n) / 16)
+        print(tmp_m)
+        print(tmp_n)
+        m_list = [128 * (j+1) for j in range(m_times)]
+        n_list = [16 * (j+1) for j in range(n_times)]
+        if tmp_n == 8:
+            n_list = [16]
+        if tmp_m == 8:
+            m_list = [16]
+        print(m_list)
+        print(n_list)
+        pipe = 0
+        cap = 0
+        for mm in m_list:
+            for nn in n_list:
+                [pipe_tmp, cap_tmp] = run(mm, i[2], nn, args)
+                if cap_tmp > cap:
+                    print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                    pipe = pipe_tmp
+                    cap = cap_tmp
         if cap == 0:
-            tmp = [i[0], i[2], i[1], args]
+            tmp = [i[0], i[2], i[1], pipe, i[4], cap]
             failres.append(tmp)
             continue
-        tmp = [i[0], i[2], i[1], i[4], cap]
+        if i[1] == 8:
+            cap /= 2
+        tmp = [i[0], i[2], i[1], pipe, i[4], cap]
         result.append(tmp)
-        print("M = ",i[0], " N = ", i[2], " K = ",i[1])
-        print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
-    pd.DataFrame(result).to_csv('DeepBench_enflame_passes_large.csv', header = 1, index = 0)
-    pd.DataFrame(failres).to_csv('DeepBench_enflame_failures_large.csv', header = 1, index = 0)
+        #break
+        #print("M = ",i[0], " N = ", i[2], " K = ",i[1])
+        #print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
+    pd.DataFrame(result).to_csv('DeepBench_enflame_passes_v2.csv', header = 1, index = 0)
+    pd.DataFrame(failres).to_csv('DeepBench_enflame_failures_v2.csv', header = 1, index = 0)
