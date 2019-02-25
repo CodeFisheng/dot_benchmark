@@ -66,9 +66,9 @@ def run(kkk, M, K, N, cqm=1, cdma=1, show=False):
     launch8 = calc_sip_launch(fp_cnt_each)
     delay = (CQM_gap_cnt-2) * time_space
 
-    if M_each * K * byte_size + K * N * byte_size > cluster_buffer_size_limit:
+    if M_each * K * byte_size + K * N * byte_size + M_each * N * byte_size > cluster_buffer_size_limit:
         print("case over size limit")
-        return [0, 0];
+        return [0, 0]
     if cqm != 1:
         time_space /= args.cqm
 

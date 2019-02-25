@@ -98,7 +98,7 @@ def run(M, K, N, args):
     pipeline_rate2 = pipeline(in0, in1, sip8, delay, out, 0, 1, 0)
     pipeline_rate3 = pipeline(in0, in1, sip8, delay, out, 1, 0, 0)
     pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
-    print('pipeline rate = ', pipeline_rate, '\n')
+    #print('pipeline rate = ', pipeline_rate, '\n')
     # print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     # print("final calculation capacity after pipeline: ", pipelined_total_cap)
@@ -212,30 +212,40 @@ if __name__ == "__main__":
     dataset = np.array(pd.read_csv('DeepBench_NV_V100.csv'))
     result = []
     failres = []
+    cntt= 0
     for i in dataset:
-        tmp_m = min(i[0], 2048)
-        tmp_n = min(i[1], 2048)
-        m_remain = tmp_m % 128
-        m_times = int((tmp_m) / 128)
-        n_remain = tmp_n % 16
-        n_times = int((tmp_n) / 16)
-        print(tmp_m)
-        print(tmp_n)
-        m_list = [128 * (j+1) for j in range(m_times)]
-        n_list = [16 * (j+1) for j in range(n_times)]
+        tmp_m = min(i[0], 512)
+        tmp_n = min(i[1], 512)
+        m_unit = 128
+        n_unit = 16
+        m_remain = tmp_m % m_unit
+        m_times = int((tmp_m) / m_unit)
+        n_remain = tmp_n % n_unit
+        n_times = int((tmp_n) / n_unit)
+        #print(tmp_m)
+        #print(tmp_n)
+        m_list = [m_unit * (j+2) for j in range(m_times - 1)]
+        n_list = [n_unit * (j+20) for j in range(n_times - 19)]
         if tmp_n == 8:
             n_list = [16]
         if tmp_m == 8:
             m_list = [16]
+        if len(n_list) == 0:
+            n_list.append(i[1])
         print(m_list)
         print(n_list)
         pipe = 0
         cap = 0
+        print('size = ', tmp_m, ' X ', tmp_n)
         for mm in m_list:
             for nn in n_list:
+                #print('size = ', mm, ' X ', nn)
                 [pipe_tmp, cap_tmp] = run(mm, i[2], nn, args)
+                #print('get cap = ', cap_tmp)
+                if cap_tmp == 0:
+                    break
                 if cap_tmp > cap:
-                    print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                    #print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
                     pipe = pipe_tmp
                     cap = cap_tmp
         if cap == 0:
@@ -245,9 +255,7 @@ if __name__ == "__main__":
         if i[1] == 8:
             cap /= 2
         tmp = [i[0], i[2], i[1], pipe, i[4], cap]
+        print("final cap = ", cap, "final pipe = ", pipe)
         result.append(tmp)
-        #break
-        #print("M = ",i[0], " N = ", i[2], " K = ",i[1])
-        #print("     NV cap = ", i[4], ";   our cap = ", cap, " TFlops")
     pd.DataFrame(result).to_csv('DeepBench_enflame_passes_v2.csv', header = 1, index = 0)
     pd.DataFrame(failres).to_csv('DeepBench_enflame_failures_v2.csv', header = 1, index = 0)
