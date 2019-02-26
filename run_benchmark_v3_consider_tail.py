@@ -49,8 +49,8 @@ def calc_sip_launch(fp_cnt):
 
 def find_k(klen, K):
     klen = int(klen)
-    for i in range(21):
-        tmp = int(K/i)
+    for i in range(1, 21):
+        tmp = np.ceil(K/i)
         if tmp < 500:
             return klen
         if tmp < klen:
@@ -65,7 +65,7 @@ def run(M, K, N, args):
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
 
     k_block = find_k(klen, K)
-    k_times = int(K/k_block) + 1
+    k_times = np.ceil(K/k_block)
     print('normal: block size = ', M, ' * ', k_block, '(', K, ')', ' * ', N)
     if klen < 500:
         print('normal: k_block < 500, error')
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     parser.add_argument("--cqm", type = float, help = 'cqm improvement rate')
     parser.add_argument("--cdma", type = float, help = 'cdma improvement rate')
     args = parser.parse_args()
-    dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100_mini.csv'))
+    dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100.csv'))
     #dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
     result = []
     time1 = time.time()
@@ -465,7 +465,7 @@ if __name__ == "__main__":
         print('size = ', i[0], ' * ', i[2], ' * ', i[1])
         tmp = go(i, args)
         result.append(tmp)
-    pd.DataFrame(result).to_csv('./res_tail/DeepBench_enflame_v3_mini.csv', header = 1, index = 0)
+    pd.DataFrame(result).to_csv('./res_tail/DeepBench_enflame_v3.csv', header = 1, index = 0)
     time2 = time.time()
     print('time = ', time2 - time1)
     #pd.DataFrame(result).to_csv('DeepBench_enflame_v3_mini_tail.csv', header = 1, index = 0)

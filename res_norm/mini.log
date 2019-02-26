@@ -1,64 +1,33 @@
-size =  2560.0  *  16.0  *  2560.0
+size =  2560.0  *  2560.0  *  16.0
 512
+16.0
+stable: block size =  128  *  2560.0  *  16
+stable: pipe =  1.5117851416163146 ; and power =  2.1460583015795827
+normal: block size =  256  *  1280.0 ( 2560.0 )  *  16
+normal: pipe =  1.6333897903030503 ; and power =  2.2105924850127168
+normal: block size =  384  *  1280.0 ( 2560.0 )  *  16
+normal: pipe =  1.459834283880038 ; and power =  2.1518276630628996
+normal: block size =  512  *  854.0 ( 2560.0 )  *  16
+normal: pipe =  1.4935671909124042 ; and power =  2.168541254123593
+ **** normal using F 2 : final cap =  2.2105924850127168 final pipe =  1.6333897903030503
+size =  2560.0  *  2560.0  *  32.0
 512
-stable: block size =  128  *  16.0  *  16
-stable: pipe =  1.9999970131186426 ; and power =  0.07977433580274539
-stable: block size =  128  *  16.0  *  32
-stable: pipe =  1.9999941228093503 ; and power =  0.1561160937608989
-stable: block size =  128  *  16.0  *  48
-stable: pipe =  1.9999913244646412 ; and power =  0.22924215290645222
-stable: block size =  128  *  16.0  *  64
-stable: pipe =  1.9999886137593041 ; and power =  0.2993514987058576
-stable: block size =  128  *  16.0  *  80
-stable: pipe =  1.9999859866459735 ; and power =  0.3666270311346376
-stable: block size =  128  *  16.0  *  96
-stable: pipe =  1.9999834393141869 ; and power =  0.4312371578533582
-stable: block size =  128  *  16.0  *  112
-stable: pipe =  1.9999809681843468 ; and power =  0.49333720171230616
-stable: block size =  128  *  16.0  *  128
-stable: pipe =  1.9999785698863766 ; and power =  0.5530706473432623
-stable: block size =  128  *  16.0  *  144
-stable: pipe =  1.9999762412482123 ; and power =  0.6105702479028212
-stable: block size =  128  *  16.0  *  160
-stable: pipe =  1.9999739792784597 ; and power =  0.6659590099318756
-stable: block size =  128  *  16.0  *  176
-stable: pipe =  1.9999717811524498 ; and power =  0.7193510717104764
-stable: block size =  128  *  16.0  *  192
-stable: pipe =  1.9999696442079056 ; and power =  0.7708524883102877
-stable: block size =  128  *  16.0  *  208
-stable: pipe =  1.9999675659244678 ; and power =  0.8205619346979529
-stable: block size =  128  *  16.0  *  224
-stable: pipe =  1.9999655439191864 ; and power =  0.8685713367084039
-stable: block size =  128  *  16.0  *  240
-stable: pipe =  1.9999635759367949 ; and power =  0.91496643837004
-stable: block size =  128  *  16.0  *  256
-stable: pipe =  1.9999616598398156 ; and power =  0.9598273129493204
-stable: block size =  128  *  16.0  *  272
-stable: pipe =  1.9999597936024816 ; and power =  1.0032288241243512
-stable: block size =  128  *  16.0  *  288
-stable: pipe =  1.9999579753066679 ; and power =  1.0452410428743013
-stable: block size =  128  *  16.0  *  304
-stable: pipe =  1.9999562031264697 ; and power =  1.085929624960754
-stable: block size =  128  *  16.0  *  320
-stable: pipe =  1.9999544753301277 ; and power =  1.1253561532928407
-stable: block size =  128  *  16.0  *  336
-stable: pipe =  1.999952790269045 ; and power =  1.163578448915715
-stable: block size =  128  *  16.0  *  352
-stable: pipe =  1.999951146379023 ; and power =  1.200650853938607
-stable: block size =  128  *  16.0  *  368
-stable: pipe =  1.9999495421693265 ; and power =  1.2366244893003406
-stable: block size =  128  *  16.0  *  384
-stable: pipe =  1.9999479762191326 ; and power =  1.2715474899544554
-stable: block size =  128  *  16.0  *  400
-stable: pipe =  1.9999464471772346 ; and power =  1.3054652197474033
-stable: block size =  128  *  16.0  *  416
-stable: pipe =  1.9999449537539056 ; and power =  1.338420467999736
-stable: block size =  128  *  16.0  *  432
-stable: pipe =  1.9999434947181105 ; and power =  1.3704536295896486
-stable: block size =  128  *  16.0  *  448
-stable: pipe =  1.999942068896597 ; and power =  1.401602870130616
-stable: block size =  128  *  16.0  *  464
-stable: pipe =  1.999940675166366 ; and power =  1.431904277657296
-stable: block size =  128  *  16.0  *  480
-stable: pipe =  1.9999393124571623 ; and power =  1.461392002098668
-stable: block size =  128  *  16.0  *  496
+32.0
+stable: block size =  128  *  2560.0  *  16
+stable: pipe =  1.5117851416163146 ; and power =  2.1460583015795827
+stable: block size =  128  *  2560.0  *  32
+stable: pipe =  1.618181091182952 ; and power =  4.270947381188847
+normal: block size =  256  *  1280.0 ( 2560.0 )  *  16
+normal: pipe =  1.6333897903030503 ; and power =  2.2105924850127168
+normal: block size =  256  *  1280.0 ( 2560.0 )  *  32
+normal: pipe =  1.8085192515782307 ; and power =  4.375527445094582
+normal: block size =  384  *  1280.0 ( 2560.0 )  *  16
+normal: pipe =  1.459834283880038 ; and power =  2.1518276630628996
+normal: block size =  384  *  854.0 ( 2560.0 )  *  32
+normal: pipe =  1.7789716745344286 ; and power =  4.382204766111325
+normal: block size =  512  *  854.0 ( 2560.0 )  *  16
+normal: pipe =  1.4935671909124042 ; and power =  2.168541254123593
+normal: block size =  512  *  854.0 ( 2560.0 )  *  32
+normal: pipe =  1.6436912814222036 ; and power =  4.303027247083721
+ **** normal using F 2 : final cap =  4.382204766111325 final pipe =  1.7789716745344286
+time =  50.912333488464355

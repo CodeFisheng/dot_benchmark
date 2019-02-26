@@ -49,8 +49,8 @@ def calc_sip_launch(fp_cnt):
 
 def find_k(klen, K):
     klen = int(klen)
-    for i in range(21):
-        tmp = int(K/i)
+    for i in range(1, 21):
+        tmp = np.ceil(K/i)
         if tmp < 500:
             return klen
         if tmp < klen:
@@ -457,7 +457,7 @@ if __name__ == "__main__":
     parser.add_argument("--cdma", type = float, help = 'cdma improvement rate')
     args = parser.parse_args()
     #dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
-    dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100_mini.csv'))
+    dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100.csv'))
     result = []
     time1 = time.time()
     for i in dataset:
@@ -465,7 +465,7 @@ if __name__ == "__main__":
         print('size = ', i[0], ' * ', i[2], ' * ', i[1])
         tmp = go(i, args)
         result.append(tmp)
-    pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_v3_mini.csv', header = 1, index = 0)
+    pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_v3.csv', header = 1, index = 0)
     time2 = time.time()
     print('time = ', time2 - time1)
     #pd.DataFrame(result).to_csv('DeepBench_enflame_v3_mini.csv', header = 1, index = 0)
