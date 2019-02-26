@@ -223,13 +223,12 @@ if __name__ == "__main__":
 
     dataset = np.array(pd.read_csv('DeepBench_NV_V100.csv'))
     result = []
-    failres = []
     for i in dataset:
         [pipe1, cap1] = run(4, i[0], i[2], i[1], cqm, cdma, show)
         [pipe2, cap2] = run(8, i[0], i[2], i[1], cqm, cdma, show)
         if cap2 == 0 and cap1 == 0:
             tmp = [i[0], i[2], i[1], pipe1, i[4], cap1]
-            failres.append(tmp)
+            result.append(tmp)
             continue
         if cap2 > cap1:
             tmp = [i[0], i[2], i[1], pipe2, i[4], cap2]
@@ -246,4 +245,4 @@ if __name__ == "__main__":
     #df.to_csv(sio, columns = ['M', 'N', 'K', 'NV_benchmark', 'Leo_benchmark'])
     #pd.DataFrame(result)to_csv('DeepBench_enflame_passcases.csv', header = ['M', 'N', 'K', 'NV_benchmark', 'Leo_benchmark'])
     pd.DataFrame(result).to_csv('DeepBench_enflame_passes.csv', header = 1, index = 0)
-    pd.DataFrame(failres).to_csv('DeepBench_enflame_failures.csv', header = 1, index = 0)
+    #pd.DataFrame(failres).to_csv('DeepBench_enflame_failures.csv', header = 1, index = 0)

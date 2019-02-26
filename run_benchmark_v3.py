@@ -1,8 +1,9 @@
 import argparse
 import numpy as np
 import pandas as pd
+import time
 
-# TODO: two pipeline methods
+# TODO: all in one method, follow leo's ppt
 # for scenario 1, in1 + in0_block + output can be put in cbuffer
 
 # size of matrix
@@ -41,14 +42,19 @@ def calc_cdma_linear(row, col):
     # return cycles/bytes * bytes = cycles
     return row * col * byte_size / cdma_linear_rate
 
-def calc_sip_launch(row, col, tail):
-    # cycles
-    return row * col * tail * 2 * new_sip_launch_rate + 7000
-
 def calc_sip_launch(fp_cnt):
     # cycles
     return fp_cnt * new_sip_launch_rate
     # return 4500 + 7000
+
+def find_k(klen, K):
+    klen = int(klen)
+    for i in range(21):
+        tmp = int(K/i)
+        if tmp < 500:
+            return klen
+        if tmp < klen:
+            return tmp
 
 def run(M, K, N, args):
     global time_space
@@ -58,12 +64,14 @@ def run(M, K, N, args):
     # print("k_block_length = ", klen)
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
 
-    k_block = klen
-    print('normal: block size = ', M, ' * ', k_block, ' * ', N)
+    k_block = find_k(klen, K)
+    k_times = int(K/k_block) + 1
+    print('normal: block size = ', M, ' * ', k_block, '(', K, ')', ' * ', N)
     if klen < 500:
         print('normal: k_block < 500, error')
-        return [0, 0]
+        return [0, 0, 0, 0, 0, 0]
     fp_cnt_block = 2 * M * k_block * N
+    fp_cnt_base = 2 * M * K * N
     in0 = calc_cdma_linear(M, k_block)
     in1 = calc_cdma_linear(k_block, N)
     out = calc_cdma_linear(M, N)
@@ -94,18 +102,36 @@ def run(M, K, N, args):
     #     print("each cycles is: ", cycles)
 
     # 4 cores
+
+    ################ version I, consider tails
+    # total_cap = (1.35/1.2) * 4 * fp_cnt_block * freq * fp_cnt_base / fp_cnt_block / k_times / cycles / 1000
+    ################ version II, not consider tails
     total_cap = (1.35/1.2) * 4 * fp_cnt_block * freq / cycles / 1000
+
     # print("[freq correction] \ncalculation capability = ", total_cap, " TFlops")
 
     pipeline_rate1 = pipeline(in0, in1, sip8, delay, cqm, out, 0, 0, 1)
     pipeline_rate2 = pipeline(in0, in1, sip8, delay, cqm, out, 0, 1, 0)
     pipeline_rate3 = pipeline(in0, in1, sip8, delay, cqm, out, 1, 0, 0)
+    if (pipeline_rate3 > pipeline_rate1)&(pipeline_rate3 > pipeline_rate2):
+            c1 = 1
+            c2 = 0
+            c3 = 0
+    elif (pipeline_rate2 > pipeline_rate1)&(pipeline_rate2 > pipeline_rate3):
+            c1 = 0
+            c2 = 1
+            c3 = 0
+    elif (pipeline_rate1 > pipeline_rate2)&(pipeline_rate1 > pipeline_rate3):
+            c1 = 0
+            c2 = 0
+            c3 = 1
+
     pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
     #print('pipeline rate = ', pipeline_rate, '\n')
     # print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     print("normal: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
-    return [pipeline_rate, pipelined_total_cap]
+    return [c1, c2, c3, pipeline_rate, pipelined_total_cap, k_block]
 
 def run_stable(M, K, N, args):
     global time_space
@@ -120,7 +146,7 @@ def run_stable(M, K, N, args):
     print('stable: block size = ', M_block, ' * ', k_block, ' * ', N_block)
     if M_block * k_block * 2 + k_block * N_block + 2 * M_block * N_block > cluster_buffer_size_limit:
         print('stable: block size > 4MB, error')
-        return [0, 0]
+        return [0, 0, 0, 0, 0, 0]
     fp_cnt_block = 2 * M_block * k_block * N_block
     in0 = calc_cdma_linear(M_block, k_block)
     in1 = calc_cdma_linear(k_block, N_block)
@@ -163,7 +189,7 @@ def run_stable(M, K, N, args):
     # print("pipeline rate = ", pipeline_rate)
     pipelined_total_cap = pipeline_rate * total_cap
     print("stable: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
-    return [pipeline_rate, pipelined_total_cap]
+    return [0, 0, 1, pipeline_rate, pipelined_total_cap, k_block]
 
 def pipeline_stable(in0, sip8, delay, cqm, out):
     cycles = {'in0':in0, 'sip8':sip8, 'delay':delay, 'cqm':cqm, 'out':out}
@@ -351,13 +377,13 @@ def pipeline(in0, in1, sip8, delay, cqm, out, in0c, in1c, outc):
         pipelined_time += cycles[exe]
     return total_time/pipelined_time
 
-def if_stable(K, N):
-    if 128 * K * 2 * byte_size + N * K * byte_size + 2 * 128 * N * byte_size < cluster_buffer_size_limit:
+def if_stable(M, N, K):
+    if M * K * 2 * byte_size + N * K * byte_size + 2 * M * N * byte_size < cluster_buffer_size_limit:
         return True
     else:
         return False
 
-def go_normal(i, args):
+def go(i, args):
     tmp_m = min(i[0], 512)
     tmp_n = min(i[1], 512)
     m_unit = 128
@@ -366,77 +392,61 @@ def go_normal(i, args):
     m_times = int((tmp_m) / m_unit)
     n_remain = tmp_n % n_unit
     n_times = int((tmp_n) / n_unit)
-    #print(tmp_m)
-    #print(tmp_n)
-    m_list = [m_unit * (j+2) for j in range(m_times - 1)]
-    n_list = [n_unit * (j+20) for j in range(n_times - 19)]
+    print(tmp_m)
+    print(tmp_n)
+    m_list = [m_unit * (j+1) for j in range(m_times)]
+    n_list = [n_unit * (j+1) for j in range(n_times)]
     if tmp_n == 8:
         n_list = [16]
     if tmp_m == 8:
         m_list = [16]
     if len(n_list) == 0:
         n_list.append(i[1])
-    print(m_list)
-    print(n_list)
     pipe = 0
     cap = 0
+    m_ = 0
+    n_ = 0
+    k_ = 0
+    f1orf2 = 1
+    global_f = 0
+    c1 = -1
+    c2 = -1
+    c3 = -1
+    cc1 = -1
+    cc2 = -1
+    cc3 = -1
+    kk = 0
     for mm in m_list:
         for nn in n_list:
-            [pipe_tmp, cap_tmp] = run(mm, i[2], nn, args)
+            if if_stable(mm, nn, i[2]):
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run_stable(mm, i[2], nn, args)
+                f1orf2 = 1
+            else:
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run(mm, i[2], nn, args)
+                f1orf2 = 2
             if cap_tmp == 0:
                 break
             if cap_tmp > cap:
                 #print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                global_f = f1orf2
                 pipe = pipe_tmp
                 cap = cap_tmp
-    print(" **** normal using F2: final cap = ", cap, "final pipe = ", pipe)
+                cc1 = c1
+                cc2 = c2
+                cc3 = c3
+                m_ = mm
+                n_ = nn
+                k_ = kk
+    print(" **** normal using F", f1orf2, ": final cap = ", cap, "final pipe = ", pipe)
     if cap == 0:
-        tmp = [i[0], i[2], i[1], pipe, i[4], cap]
+        tmp = [i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'fail', pipe, i[4], cap]
     else:
         if i[1] == 8:
             cap /= 2
-        tmp = [i[0], i[2], i[1], pipe, i[4], cap]
-    return tmp
-
-def go_stable(i, args):
-    tmp_m = min(i[0], 640)
-    tmp_n = i[1]
-    m_unit = 128
-    n_unit = 16
-    m_remain = tmp_m % m_unit
-    m_times = int((tmp_m) / m_unit)
-    n_remain = tmp_n % n_unit
-    n_times = int((tmp_n) / n_unit)
-    #print(tmp_m)
-    #print(tmp_n)
-    m_list = [m_unit * (j+1) for j in range(m_times - 1)]
-    n_list = [n_unit * (j+1) for j in range(n_times - 1)]
-    if tmp_n == 8:
-        n_list = [16]
-    if tmp_m == 8:
-        m_list = [16]
-    if len(n_list) == 0:
-        n_list.append(i[1])
-    print(m_list)
-    print(n_list)
-    pipe = 0
-    cap = 0
-    for mm in m_list:
-        for nn in n_list:
-            [pipe_tmp, cap_tmp] = run_stable(mm, i[2], nn, args)
-            if cap_tmp == 0:
-                break
-            if cap_tmp > cap:
-                #print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
-                pipe = pipe_tmp
-                cap = cap_tmp
-    print(" ****  stable using F1: final cap = ", cap, "final pipe = ", pipe)
-    if cap == 0:
-        tmp = [i[0], i[2], i[1], pipe, i[4], cap]
-    else:
-        if i[1] == 8:
-            cap /= 2
-        tmp = [i[0], i[2], i[1], pipe, i[4], cap]
+        if global_f == 1:
+            tmp = [i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'F1', pipe, i[4], cap]
+        else:
+            tmp = [i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'F2', pipe, i[4], cap]
     return tmp
 
 
@@ -446,18 +456,16 @@ if __name__ == "__main__":
     parser.add_argument("--cqm", type = float, help = 'cqm improvement rate')
     parser.add_argument("--cdma", type = float, help = 'cdma improvement rate')
     args = parser.parse_args()
-    dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
+    #dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
+    dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100_mini.csv'))
     result = []
+    time1 = time.time()
     for i in dataset:
         tmp = []
-        if if_stable(i[2], i[1]):
-            print("go to stable run")
-            print('size = ', i[0], ' * ', i[2], ' * ', i[1])
-            tmp = go_stable(i, args)
-        else:
-            print("go to normal run")
-            print('size = ', i[0], ' * ', i[2], ' * ', i[1])
-            tmp = go_normal(i, args)
+        print('size = ', i[0], ' * ', i[2], ' * ', i[1])
+        tmp = go(i, args)
         result.append(tmp)
-    pd.DataFrame(result).to_csv('DeepBench_enflame_passes_v2.csv', header = 1, index = 0)
-    #pd.DataFrame(failres).to_csv('DeepBench_enflame_failures_v2.csv', header = 1, index = 0)
+    pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_v3_mini.csv', header = 1, index = 0)
+    time2 = time.time()
+    print('time = ', time2 - time1)
+    #pd.DataFrame(result).to_csv('DeepBench_enflame_v3_mini.csv', header = 1, index = 0)
