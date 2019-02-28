@@ -40,11 +40,11 @@ time_space_max = 500 #cycles
 global cqm, cdma, show
 def calc_cdma_linear(row, col):
     # return cycles/bytes * bytes = cycles
-    return row * col * byte_size / cdma_linear_rate # TODO conservate
+    return 46 * row * col * byte_size / cdma_linear_rate / 36 # TODO conservate
 
 def calc_sip_launch(fp_cnt):
     # cycles
-    return fp_cnt * new_sip_launch_rate * 20 / 17 # TODO conservate
+    return fp_cnt * new_sip_launch_rate * 10 / 9 # TODO conservate
     # return 4500 + 7000
 
 def find_k(klen, K):
@@ -130,7 +130,7 @@ def run(M, K, N, args):
     #print('pipeline rate = ', pipeline_rate, '\n')
     # print("pipeline rate = ", pipeline_rate)
     # TODO conservate
-    pipeline_rate = 1.0 + 0.6 * (pipeline_rate - 1.0)
+    pipeline_rate = 1.0 + 0.5 * (pipeline_rate - 1.0)
     pipelined_total_cap = pipeline_rate * total_cap
     print("normal: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
     return [c1, c2, c3, pipeline_rate, pipelined_total_cap, k_block]
@@ -190,7 +190,7 @@ def run_stable(M, K, N, args):
     #print('pipeline rate = ', pipeline_rate, '\n')
     # print("pipeline rate = ", pipeline_rate)
     # TODO conservate
-    pipeline_rate = 1.0 + 0.6 * (pipeline_rate - 1.0)
+    pipeline_rate = 1.0 + 0.5 * (pipeline_rate - 1.0)
     pipelined_total_cap = pipeline_rate * total_cap
     print("stable: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
     return [0, 0, 1, pipeline_rate, pipelined_total_cap, k_block]
@@ -469,7 +469,7 @@ if __name__ == "__main__":
         print('size = ', i[0], ' * ', i[2], ' * ', i[1])
         tmp = go(i, args)
         result.append(tmp)
-    pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_final.csv', header = 1, index = 0)
+    pd.DataFrame(result).to_csv('./res_sip/DeepBench_enflame.csv', header = 1, index = 0)
     time2 = time.time()
     print('time = ', time2 - time1)
     #pd.DataFrame(result).to_csv('DeepBench_enflame_v3_mini.csv', header = 1, index = 0)

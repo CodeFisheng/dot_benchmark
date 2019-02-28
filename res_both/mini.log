@@ -1,0 +1,215 @@
+size =  2048  *  2048  *  7000
+512
+512
+stable: block size =  128  *  2048  *  16
+stable: pipe =  1.312901022738411 ; and power =  1.7544295313478324
+stable: block size =  128  *  2048  *  32
+stable: pipe =  1.372442447612463 ; and power =  3.397098932816222
+stable: block size =  128  *  2048  *  48
+stable: pipe =  1.4319824542003738 ; and power =  4.951061703929662
+stable: block size =  128  *  2048  *  64
+stable: pipe =  1.4915210425545014 ; and power =  6.433437553305542
+stable: block size =  128  *  2048  *  80
+stable: pipe =  1.499952433865008 ; and power =  7.598319225013273
+stable: block size =  128  *  2048  *  96
+stable: pipe =  1.4999810297659546 ; and power =  8.598321993981093
+stable: block size =  128  *  2048  *  112
+stable: pipe =  1.4999816613475838 ; and power =  9.490327190599738
+stable: block size =  128  *  2048  *  128
+stable: pipe =  1.4999822317610867 ; and power =  10.291034892128621
+stable: block size =  128  *  2048  *  144
+stable: pipe =  1.4999827494807256 ; and power =  11.01377928589262
+stable: block size =  128  *  2048  *  160
+stable: pipe =  1.499983221487927 ; and power =  11.669418457637642
+stable: block size =  128  *  2048  *  176
+stable: pipe =  1.4999836535795066 ; and power =  12.26688364497718
+stable: block size =  128  *  2048  *  192
+stable: pipe =  1.4999840506132174 ; and power =  12.813588497879863
+stable: block size =  128  *  2048  *  208
+stable: pipe =  1.4999844166907108 ; and power =  13.315738277900312
+stable: block size =  128  *  2048  *  224
+stable: pipe =  1.4999847552953138 ; and power =  13.778566420280491
+normal: block size =  128  *  1024.0 ( 2048 )  *  240
+normal: pipe =  1.4999834005649455 ; and power =  8.124035629896962
+normal: block size =  128  *  1024.0 ( 2048 )  *  256
+normal: pipe =  1.4999838246343336 ; and power =  8.287936891396201
+normal: block size =  128  *  1024.0 ( 2048 )  *  272
+normal: pipe =  1.4999842154645433 ; and power =  8.438147273307745
+normal: block size =  128  *  1024.0 ( 2048 )  *  288
+normal: pipe =  1.499984576816848 ; and power =  8.576313427566209
+normal: block size =  128  *  1024.0 ( 2048 )  *  304
+normal: pipe =  1.4999849119075064 ; and power =  8.703828119550229
+normal: block size =  128  *  1024.0 ( 2048 )  *  320
+normal: pipe =  1.4999852234962239 ; and power =  8.821877343353785
+normal: block size =  128  *  1024.0 ( 2048 )  *  336
+normal: pipe =  1.4999855139729084 ; and power =  8.93147732046159
+normal: block size =  128  *  683.0 ( 2048 )  *  352
+normal: pipe =  1.4999805681531582 ; and power =  8.404560705138516
+normal: block size =  128  *  683.0 ( 2048 )  *  368
+normal: pipe =  1.499980879299009 ; and power =  8.504734993079701
+normal: block size =  128  *  683.0 ( 2048 )  *  384
+normal: pipe =  1.4999811723878556 ; and power =  8.598682362636143
+normal: block size =  128  *  683.0 ( 2048 )  *  400
+normal: pipe =  1.4999814489481214 ; and power =  8.68696591831313
+normal: block size =  128  *  683.0 ( 2048 )  *  416
+normal: pipe =  1.499981710338698 ; and power =  8.770082855413724
+normal: block size =  128  *  683.0 ( 2048 )  *  432
+normal: pipe =  1.4999819577754523 ; and power =  8.84847382893652
+normal: block size =  128  *  683.0 ( 2048 )  *  448
+normal: pipe =  1.499982192346494 ; and power =  8.922530768483732
+normal: block size =  128  *  683.0 ( 2048 )  *  464
+normal: pipe =  1.4999824150294 ; and power =  8.992603431861614
+normal: block size =  128  *  683.0 ( 2048 )  *  480
+normal: pipe =  1.499982626705406 ; and power =  9.059004928630685
+normal: block size =  128  *  683.0 ( 2048 )  *  496
+normal: pipe =  1.4999828281725927 ; and power =  9.122016397671896
+normal: block size =  128  *  683.0 ( 2048 )  *  512
+normal: pipe =  1.4999830201495206 ; and power =  9.181890986119715
+normal: block size =  256  *  1024.0 ( 2048 )  *  16
+normal: pipe =  1.3810910818734352 ; and power =  1.762578735481541
+normal: block size =  256  *  1024.0 ( 2048 )  *  32
+normal: pipe =  1.4757790473627415 ; and power =  3.359907583654807
+normal: block size =  256  *  1024.0 ( 2048 )  *  48
+normal: pipe =  1.4999528819815149 ; and power =  4.622990285353268
+normal: block size =  256  *  1024.0 ( 2048 )  *  64
+normal: pipe =  1.499959310865361 ; and power =  5.6164227785863154
+normal: block size =  256  *  1024.0 ( 2048 )  *  80
+normal: pipe =  1.499957333091968 ; and power =  6.447724567250937
+normal: block size =  256  *  1024.0 ( 2048 )  *  96
+normal: pipe =  1.4999827163119073 ; and power =  7.15373673015344
+normal: block size =  256  *  1024.0 ( 2048 )  *  112
+normal: pipe =  1.4999833066846822 ; and power =  7.760614640848047
+normal: block size =  256  *  1024.0 ( 2048 )  *  128
+normal: pipe =  1.499983824634073 ; and power =  8.287936891394763
+normal: block size =  256  *  1024.0 ( 2048 )  *  144
+normal: pipe =  1.4999842827166106 ; and power =  8.750384643356961
+normal: block size =  256  *  1024.0 ( 2048 )  *  160
+normal: pipe =  1.4999846907463292 ; and power =  9.15923604841646
+normal: block size =  256  *  1024.0 ( 2048 )  *  176
+normal: pipe =  1.4999850564996455 ; and power =  9.523298238973524
+normal: block size =  256  *  1024.0 ( 2048 )  *  192
+normal: pipe =  1.4999853862244268 ; and power =  9.849548928875103
+normal: block size =  256  *  683.0 ( 2048 )  *  208
+normal: pipe =  1.4999804180281262 ; and power =  9.434418007010182
+normal: block size =  256  *  683.0 ( 2048 )  *  224
+normal: pipe =  1.4999807468992006 ; and power =  9.696585841094224
+normal: block size =  256  *  683.0 ( 2048 )  *  240
+normal: pipe =  1.4999810488412904 ; and power =  9.935874718666124
+normal: block size =  256  *  683.0 ( 2048 )  *  256
+normal: pipe =  1.4999813270322977 ; and power =  10.155154337137231
+normal: block size =  256  *  683.0 ( 2048 )  *  272
+normal: pipe =  1.4999815841684816 ; and power =  10.356833727681598
+normal: block size =  256  *  683.0 ( 2048 )  *  288
+normal: pipe =  1.4999818225521615 ; and power =  10.542950125878184
+normal: block size =  256  *  683.0 ( 2048 )  *  304
+normal: pipe =  1.499982044163807 ; and power =  10.71523803302699
+normal: block size =  256  *  683.0 ( 2048 )  *  320
+normal: pipe =  1.4999822507126432 ; and power =  10.87518343498734
+normal: block size =  256  *  683.0 ( 2048 )  *  336
+normal: pipe =  1.499982443684712 ; and power =  11.024066771488082
+normal: block size =  256  *  683.0 ( 2048 )  *  352
+normal: pipe =  1.4999826243730467 ; and power =  11.16299728789993
+normal: block size =  256  *  683.0 ( 2048 )  *  368
+normal: pipe =  1.4999827939191088 ; and power =  11.29294072072387
+normal: block size =  256  *  512.0 ( 2048 )  *  384
+normal: pipe =  1.499978787307319 ; and power =  10.77242604142974
+normal: block size =  256  *  512.0 ( 2048 )  *  400
+normal: pipe =  1.4999789557054424 ; and power =  10.886616635652947
+normal: block size =  256  *  512.0 ( 2048 )  *  416
+normal: pipe =  1.4999791148679684 ; and power =  10.99419330383428
+normal: block size =  256  *  512.0 ( 2048 )  *  432
+normal: pipe =  1.4999792655332342 ; and power =  11.09571449195889
+normal: block size =  256  *  512.0 ( 2048 )  *  448
+normal: pipe =  1.4999794083653333 ; and power =  11.191677497294213
+normal: block size =  256  *  512.0 ( 2048 )  *  464
+normal: pipe =  1.4999795439580994 ; and power =  11.282526614923379
+normal: block size =  256  *  512.0 ( 2048 )  *  480
+normal: pipe =  1.4999796728496642 ; and power =  11.368660015770557
+normal: block size =  256  *  512.0 ( 2048 )  *  496
+normal: pipe =  1.499979795523223 ; and power =  11.450435580577594
+normal: block size =  256  *  512 ( 2048 )  *  512
+normal: pipe =  1.4999799124195325 ; and power =  11.528175870323272
+normal: block size =  384  *  1024.0 ( 2048 )  *  16
+normal: pipe =  1.2752248522999368 ; and power =  1.794633314646892
+normal: block size =  384  *  1024.0 ( 2048 )  *  32
+normal: pipe =  1.3595020747162678 ; and power =  3.4199577727593753
+normal: block size =  384  *  1024.0 ( 2048 )  *  48
+normal: pipe =  1.4437764556799495 ; and power =  4.924742583781844
+normal: block size =  384  *  1024.0 ( 2048 )  *  64
+normal: pipe =  1.4999513691008781 ; and power =  6.224076711661513
+normal: block size =  384  *  1024.0 ( 2048 )  *  80
+normal: pipe =  1.491226274674749 ; and power =  7.111707217067218
+normal: block size =  384  *  683.0 ( 2048 )  *  96
+normal: pipe =  1.4999804286485385 ; and power =  7.384208039576381
+normal: block size =  384  *  683.0 ( 2048 )  *  112
+normal: pipe =  1.4999808238840944 ; and power =  8.032497523219522
+normal: block size =  384  *  683.0 ( 2048 )  *  128
+normal: pipe =  1.4999811723878516 ; and power =  8.59868236263612
+normal: block size =  384  *  683.0 ( 2048 )  *  144
+normal: pipe =  1.4999814819855595 ; and power =  9.097431276580307
+normal: block size =  384  *  683.0 ( 2048 )  *  160
+normal: pipe =  1.4999817588489401 ; and power =  9.540115119416294
+normal: block size =  384  *  683.0 ( 2048 )  *  176
+normal: pipe =  1.4999820079082227 ; and power =  9.935684356529265
+normal: block size =  384  *  683.0 ( 2048 )  *  192
+normal: pipe =  1.4999822331514068 ; and power =  10.29128052760761
+normal: block size =  384  *  683.0 ( 2048 )  *  208
+normal: pipe =  1.4999824378394417 ; and power =  10.61267125649854
+normal: block size =  384  *  683.0 ( 2048 )  *  224
+normal: pipe =  1.4999826246629682 ; and power =  10.90456548838128
+normal: block size =  384  *  683.0 ( 2048 )  *  240
+normal: pipe =  1.4999827958621514 ; and power =  11.170845739875011
+normal: block size =  384  *  512.0 ( 2048 )  *  256
+normal: pipe =  1.4999787873074988 ; and power =  10.772426041431032
+normal: block size =  384  *  512.0 ( 2048 )  *  272
+normal: pipe =  1.4999789471791283 ; and power =  10.990416274141614
+normal: block size =  384  *  512.0 ( 2048 )  *  288
+normal: pipe =  1.4999790954546741 ; and power =  11.191727563884308
+normal: block size =  384  *  512.0 ( 2048 )  *  304
+normal: pipe =  1.4999792333522444 ; and power =  11.378203596029303
+normal: block size =  384  *  512.0 ( 2048 )  *  320
+normal: pipe =  1.499979361924737 ; and power =  11.551425978654304
+normal: block size =  384  *  512.0 ( 2048 )  *  336
+normal: pipe =  1.499979482086613 ; and power =  11.712759211865029
+normal: block size =  384  *  512.0 ( 2048 )  *  352
+normal: pipe =  1.4999795946372974 ; and power =  11.863386704911196
+normal: block size =  384  *  509 ( 2048 )  *  368
+normal: pipe =  1.4999796103248806 ; and power =  11.989333102515188
+normal: block size =  384  *  490 ( 2048 )  *  384
+normal: k_block < 500, error
+normal: block size =  512  *  683.0 ( 2048 )  *  16
+normal: pipe =  1.2976756777601441 ; and power =  1.790305665786841
+normal: block size =  512  *  683.0 ( 2048 )  *  32
+normal: pipe =  1.3806446253686677 ; and power =  3.417489298856401
+normal: block size =  512  *  683.0 ( 2048 )  *  48
+normal: pipe =  1.4636108190442871 ; and power =  4.927204730981023
+normal: block size =  512  *  683.0 ( 2048 )  *  64
+normal: pipe =  1.4999522300793733 ; and power =  6.158111602367595
+normal: block size =  512  *  683.0 ( 2048 )  *  80
+normal: pipe =  1.4681940751157097 ; and power =  6.942166459389856
+normal: block size =  512  *  683.0 ( 2048 )  *  96
+normal: pipe =  1.4999509301736285 ; and power =  7.890328653846735
+normal: block size =  512  *  683.0 ( 2048 )  *  112
+normal: pipe =  1.4999828366258046 ; and power =  8.580067735012957
+normal: block size =  512  *  683.0 ( 2048 )  *  128
+normal: pipe =  1.4999830201495068 ; and power =  9.18189098611963
+normal: block size =  512  *  683.0 ( 2048 )  *  144
+normal: pipe =  1.4999831828327892 ; and power =  9.711712513320935
+normal: block size =  512  *  512.0 ( 2048 )  *  160
+normal: pipe =  1.499979248903815 ; and power =  9.619009703801206
+normal: block size =  512  *  512.0 ( 2048 )  *  176
+normal: pipe =  1.499979387066486 ; and power =  10.021342153855903
+normal: block size =  512  *  512.0 ( 2048 )  *  192
+normal: pipe =  1.499979512103816 ; and power =  10.383257573233466
+normal: block size =  512  *  512.0 ( 2048 )  *  208
+normal: pipe =  1.499979625799091 ; and power =  10.710554937541588
+normal: block size =  512  *  512.0 ( 2048 )  *  224
+normal: pipe =  1.4999797296300192 ; and power =  11.00797448639791
+normal: block size =  512  *  512.0 ( 2048 )  *  240
+normal: pipe =  1.4999798248251737 ; and power =  11.279428797119074
+normal: block size =  512  *  512 ( 2048 )  *  256
+normal: pipe =  1.4999799124195328 ; and power =  11.528175870323274
+normal: block size =  512  *  491 ( 2048 )  *  272
+normal: k_block < 500, error
+ **** normal using F 2 : final cap =  13.778566420280491 final pipe =  1.4999847552953138
+time =  488.99963569641113

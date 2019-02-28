@@ -1,21 +1,4 @@
-size =  2048  *  2048  *  32
+size =  512  *  500000  *  8
 512
-32
-stable: block size =  128  *  2048  *  16
-stable: pipe =  1.251179555781913 ; and power =  1.3970861423460732
-stable: block size =  128  *  2048  *  32
-stable: pipe =  1.3040702014031007 ; and power =  2.7075217180477384
-normal: block size =  256  *  1024.0 ( 2048 )  *  16
-normal: pipe =  1.3121884846491862 ; and power =  1.3950889835269058
-normal: block size =  256  *  1024.0 ( 2048 )  *  32
-normal: pipe =  1.4002270414502282 ; and power =  2.658690339539971
-normal: block size =  384  *  1024.0 ( 2048 )  *  16
-normal: pipe =  1.2270706726933591 ; and power =  1.4190848244288097
-normal: block size =  384  *  1024.0 ( 2048 )  *  32
-normal: pipe =  1.3046972790062128 ; and power =  2.7065648901832273
-normal: block size =  512  *  683.0 ( 2048 )  *  16
-normal: pipe =  1.2443569563227554 ; and power =  1.416318699437532
-normal: block size =  512  *  683.0 ( 2048 )  *  32
-normal: pipe =  1.3206754708323434 ; and power =  2.7054216667804134
- **** normal using F 2 : final cap =  2.7075217180477384 final pipe =  1.3040702014031007
-time =  33.394269943237305
+8
+normal: block size =  128  *  3624.0 ( 500000 )  *  16
