@@ -19,16 +19,10 @@ def run(M, K, N, args):
         print('normal: K_block < 500, error')
         return [0, 0, 0, 0, 0, 0]
     fp_cnt_block = 2 * M * N * K_block
-    if args.dtype == 0:
-        in0 = cdma_cycles_fp16(M, K_block)
-        in1 = cdma_cycles_fp16(K_block, N)
-        out = cdma_cycles_fp16(M, N)
-        sip8 = sip_cycles_fp16(M, K_block, N)
-    elif args.dtype == 1:
-        in0 = cdma_cycles_fp32(M, K_block)
-        in1 = cdma_cycles_fp32(K_block, N)
-        out = cdma_cycles_fp32(M, N)
-        sip8 = sip_cycles_fp32(M, K_block, N)
+    in0 = cdma_cycles(M, K_block, args)
+    in1 = cdma_cycles(K_block, N, args)
+    out = cdma_cycles(M, N, args)
+    sip8 = sip_cycles(M, K_block, N, args)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + in1 + sip8 + delay + cqm + out
@@ -85,16 +79,10 @@ def run_static(M, K, N, args):
         print('static: block size > 4MB, error')
         return [0, 0, 0, 0, 0, 0]
     fp_cnt_block = 2 * M_block * K_block * N_block
-    if args.dtype == 0:
-        in0 = cdma_cycles_fp16(M_block, K_block)
-        in1 = cdma_cycles_fp16(K_block, N_block)
-        out = cdma_cycles_fp16(M_block, N_block)
-        sip8 = sip_cycles_fp16(M_block, K_block, N_block)
-    elif args.dtype == 1:
-        in0 = cdma_cycles_fp32(M_block, K_block)
-        in1 = cdma_cycles_fp32(K_block, N_block)
-        out = cdma_cycles_fp32(M_block, N_block)
-        sip8 = sip_cycles_fp32(M_block, K_block, N_block)
+    in0 = cdma_cycles(M, K_block, args)
+    in1 = cdma_cycles(K_block, N, args)
+    out = cdma_cycles(M, N, args)
+    sip8 = sip_cycles(M, K_block, N, args)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + sip8 + delay + cqm + out
