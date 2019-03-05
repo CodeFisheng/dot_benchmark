@@ -93,6 +93,7 @@ def pipeline(in0, in1, sip8, delay, cqm, out, in0c, in1c, outc):
         pipelined_time += cycles[exe]
     return total_time/pipelined_time
 
+
 def pipeline_stable(in0, sip8, delay, cqm, out):
     cycles = {'in0':in0, 'sip8':sip8, 'delay':delay, 'cqm':cqm, 'out':out}
     group = {'in0':1, 'sip8':2, 'delay':3, 'cqm':4, 'out':5}

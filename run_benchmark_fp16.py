@@ -6,6 +6,7 @@ from cdma import *
 from sip import *
 from pipeline import *
 from utils import *
+from param_config import *
 
 # TODO: all in one method, follow leo's ppt
 # for scenario 1, in1 + in0_block + output can be put in cbuffer
@@ -116,24 +117,6 @@ def run_stable(M, K, N, args):
 
 
 def go(i, args):
-    tmp_m = min(i[0], 512)
-    tmp_n = min(i[1], 512)
-    m_unit = 128
-    n_unit = 16
-    m_remain = tmp_m % m_unit
-    m_times = int((tmp_m) / m_unit)
-    n_remain = tmp_n % n_unit
-    n_times = int((tmp_n) / n_unit)
-    print(tmp_m)
-    print(tmp_n)
-    m_list = [m_unit * (j+1) for j in range(m_times)]
-    n_list = [n_unit * (j+1) for j in range(n_times)]
-    if tmp_n == 8:
-        n_list = [16]
-    if tmp_m == 8:
-        m_list = [16]
-    if len(n_list) == 0:
-        n_list.append(i[1])
     pipe = 0
     cap = 0
     m_ = 0
@@ -141,16 +124,16 @@ def go(i, args):
     k_ = 0
     f1orf2 = 1
     global_f = 0
-    c1 = -1
-    c2 = -1
-    c3 = -1
     cc1 = -1
     cc2 = -1
     cc3 = -1
-    kk = 0
+
+    # search for best slice strategy (m, n, k) in cbuffer
+    # from hbm to cbuffer, use cdma method
+    [m_list, n_list] = get_search_list(i[0], i[1])
     for mm in m_list:
         for nn in n_list:
-            if if_static(mm, nn, i[2]):
+            if if_static_fp16(mm, nn, i[2]):
                 [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run_stable(mm, i[2], nn, args)
                 f1orf2 = 1
             else:
@@ -171,17 +154,23 @@ def go(i, args):
                 k_ = kk
     print(" **** normal using F", f1orf2, ": final cap = ", cap, "final pipe = ", pipe)
     if cap == 0:
-        tmp = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'fail', pipe, i[4], cap]
+        method = 'Fail'
     else:
+        # check if need padding from size 8 to size 16
         if i[1] == 8:
             cap /= 2
+
+        # check which method was used
         if global_f == 1:
-            tmp = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'F1', pipe, i[4], cap]
+            method = 'F1'
             print('m = ', m_, 'k_', k_, 'n_', n_)
         else:
-            tmp = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, 'F2', pipe, i[4], cap]
+            method = 'F2'
             print('m = ', m_, 'k_', k_, 'n_', n_)
-    return tmp
+    # pack output
+    ret = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, method, \
+            pipe, i[4], cap]
+    return ret
 
 
 if __name__ == "__main__":
@@ -196,6 +185,8 @@ if __name__ == "__main__":
     dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100.csv'))
     result = []
     time1 = time.time()
+
+    # dispatch to different input sources
     if args.data == 1:
         tmp_size = [args.m, args.n, args.k, 0, 0, "test"]
         print('size = ', tmp_size[0], ' * ', tmp_size[2], ' * ', tmp_size[1])
