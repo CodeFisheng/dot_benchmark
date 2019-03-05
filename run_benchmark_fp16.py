@@ -13,23 +13,28 @@ from param_config import *
 
 
 def run(M, K, N, args):
-    klen = (cluster_buffer_size_limit - 2 * M * N * byte_size_fp16)  /\
-           (2 * byte_size_fp16 * M + 2 * byte_size_fp16 * N)
-    k_block = find_k(klen, K)
-    print('normal: block size = ', M, ' * ', k_block, '(', K, ')', ' * ', N)
-    if klen < 256:
-        print('normal: k_block < 500, error')
+    K_block = find_k(M, K, N, args)
+    print('normal: block size = ', M, ' * ', K_block, '(', K, ')', ' * ', N)
+    if K_block < 256:
+        print('normal: K_block < 500, error')
         return [0, 0, 0, 0, 0, 0]
-    fp_cnt_block = 2 * M * N * k_block
-    in0 = cdma_cycles_fp16(M, k_block)
-    in1 = cdma_cycles_fp16(k_block, N)
-    out = cdma_cycles_fp16(M, N)
-    sip8 = sip_cycles_fp16(M, k_block, N)
+    fp_cnt_block = 2 * M * N * K_block
+    if args.dtype == 0:
+        in0 = cdma_cycles_fp16(M, K_block)
+        in1 = cdma_cycles_fp16(K_block, N)
+        out = cdma_cycles_fp16(M, N)
+        sip8 = sip_cycles_fp16(M, K_block, N)
+    elif args.dtype == 1:
+        in0 = cdma_cycles_fp32(M, K_block)
+        in1 = cdma_cycles_fp32(K_block, N)
+        out = cdma_cycles_fp32(M, N)
+        sip8 = sip_cycles_fp32(M, K_block, N)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + in1 + sip8 + delay + cqm + out
 
-    total_cap = (get_turbo_freq() / get_freq()) * byte_size_fp32 * fp_cnt_block * \
+    # should be always 4
+    total_cap = (get_turbo_freq() / get_freq()) * 4 * fp_cnt_block * \
                 get_freq() / cycles / 1000
 
     # print breakdown cycles
@@ -59,38 +64,43 @@ def run(M, K, N, args):
     pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
 
     # for conservation, pipeline real efficiency
-    pipeline_rate = 1.0 + 1.0 * (pipeline_rate - 1.0)
+    pipeline_rate = 1.0 + pipeline_efficiency * (pipeline_rate - 1.0)
 
     # output results
     pipelined_total_cap = pipeline_rate * total_cap
     print("normal: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
-    return [c1, c2, c3, pipeline_rate, pipelined_total_cap, k_block]
+    return [c1, c2, c3, pipeline_rate, pipelined_total_cap, K_block]
 
-def run_stable(M, K, N, args):
+def run_static(M, K, N, args):
     global time_space
     # print('M = ', M, '; N = ', N)
-    # print("k_block_length = ", klen)
+    # print("K_block_length = ", klen)
     # where this 2* cycles comes from, 128? but I saw cycles launch8 counted
 
     M_block = M
     N_block = N
-    k_block = K
-    print('stable: block size = ', M_block, ' * ', k_block, ' * ', N_block)
-    if M_block * k_block * 2 + k_block * N_block + 2 * M_block * N_block > \
-        cluster_buffer_size_limit / byte_size_fp16:
-        print('stable: block size > 4MB, error')
+    K_block = K
+    print('static: block size = ', M_block, ' * ', K_block, ' * ', N_block)
+    if if_static(M_block, N_block, K_block, args) == False:
+        print('static: block size > 4MB, error')
         return [0, 0, 0, 0, 0, 0]
-    fp_cnt_block = 2 * M_block * k_block * N_block
-    in0 = cdma_cycles_fp16(M_block, k_block)
-    in1 = cdma_cycles_fp16(k_block, N_block)
-    out = cdma_cycles_fp16(M_block, N_block)
-    sip8 = sip_cycles_fp16(M_block, k_block, N_block)
+    fp_cnt_block = 2 * M_block * K_block * N_block
+    if args.dtype == 0:
+        in0 = cdma_cycles_fp16(M_block, K_block)
+        in1 = cdma_cycles_fp16(K_block, N_block)
+        out = cdma_cycles_fp16(M_block, N_block)
+        sip8 = sip_cycles_fp16(M_block, K_block, N_block)
+    elif args.dtype == 1:
+        in0 = cdma_cycles_fp32(M_block, K_block)
+        in1 = cdma_cycles_fp32(K_block, N_block)
+        out = cdma_cycles_fp32(M_block, N_block)
+        sip8 = sip_cycles_fp32(M_block, K_block, N_block)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + sip8 + delay + cqm + out
 
     # total_cap = (1.35/1.2) * 4 * fp_cnt_block * freq / cycles / 1000
-    total_cap = (get_turbo_freq() / get_freq()) * byte_size_fp32 * fp_cnt_block * \
+    total_cap = (get_turbo_freq() / get_freq()) * 4 * fp_cnt_block * \
                 get_freq() / cycles / 1000
 
     # print breakdown cycles
@@ -102,18 +112,18 @@ def run_stable(M, K, N, args):
         print("total cycles = ", cycles, " cycles")
 
     # find best pipeline solution
-    pipeline_rate1 = pipeline_stable(in0, sip8, delay, cqm, out)
-    pipeline_rate2 = pipeline_stable(in0, sip8, delay, cqm, out)
-    pipeline_rate3 = pipeline_stable(in0, sip8, delay, cqm, out)
+    pipeline_rate1 = pipeline_static(in0, sip8, delay, cqm, out)
+    pipeline_rate2 = pipeline_static(in0, sip8, delay, cqm, out)
+    pipeline_rate3 = pipeline_static(in0, sip8, delay, cqm, out)
     pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
 
     # for conservation, pipeline real efficiency
-    pipeline_rate = 1.0 + 1.0 * (pipeline_rate - 1.0)
+    pipeline_rate = 1.0 + pipeline_efficiency * (pipeline_rate - 1.0)
 
     # output results
     pipelined_total_cap = pipeline_rate * total_cap
-    print("stable: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap, '\n')
-    return [0, 0, 1, pipeline_rate, pipelined_total_cap, k_block]
+    print("static: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap, '\n')
+    return [0, 0, 1, pipeline_rate, pipelined_total_cap, K_block]
 
 
 def go(i, args):
@@ -133,8 +143,8 @@ def go(i, args):
     [m_list, n_list] = get_search_list(i[0], i[1])
     for mm in m_list:
         for nn in n_list:
-            if if_static_fp16(mm, nn, i[2]):
-                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run_stable(mm, i[2], nn, args)
+            if if_static(mm, nn, i[2], args):
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run_static(mm, i[2], nn, args)
                 f1orf2 = 1
             else:
                 [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run(mm, i[2], nn, args)
@@ -180,6 +190,7 @@ if __name__ == "__main__":
     parser.add_argument("--m", type = int)
     parser.add_argument("--n", type = int)
     parser.add_argument("--k", type = int)
+    parser.add_argument("--dtype", type = int) # fp32: 1, fp16: 0
     args = parser.parse_args()
     # dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
     dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100.csv'))
@@ -198,7 +209,11 @@ if __name__ == "__main__":
             print('size = ', i[0], ' * ', i[2], ' * ', i[1])
             tmp = go(i, args)
             result.append(tmp)
-            pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_final.csv', \
-                                        header = 1, index = 0)
+            if args.dtype == 0:
+                pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_fp16.csv', \
+                                            header = 1, index = 0)
+            else:
+                pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_fp32.csv', \
+                                            header = 1, index = 0)
     time2 = time.time()
     print('time = ', time2 - time1)
