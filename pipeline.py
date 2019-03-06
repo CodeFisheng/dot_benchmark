@@ -184,3 +184,9 @@ def pipeline_static(in0, sip8, delay, cqm, out):
         exe = stream2.pop(0)
         pipelined_time += cycles[exe]
     return total_time/pipelined_time
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    argparse.add_argument('--in0', type = float)

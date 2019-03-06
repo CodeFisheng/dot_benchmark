@@ -16,8 +16,10 @@ sip_delay_cycles_ = 7000
 byte_size_fp32 = 4
 byte_size_fp16 = 2
 cluster_buffer_size_limit = 4*1024*1024 #bytes
-sip_base_eff = 1.0
-pipeline_efficiency = 1.0
+sip_base_eff = 0.8
+pipeline_efficiency = 0.7
 cdma_efficiency = 1.0
 mode_x = 4
 mode_y = 8
+sip_base_power = 86.4 * 1.2 / 1.35
+

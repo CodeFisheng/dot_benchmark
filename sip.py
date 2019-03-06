@@ -40,7 +40,7 @@ def sip_cycles_fp16(m, k, n, flag):
             sip_code_eff_ = sip_code_efficiency_fp16(m, k, n, x, y, z)
             sip_dma_eff_ = sip_dma_efficiency_fp16(m, k, n, x, y, z, flag)
             sip_leading_eff_ = sip_leading_efficiency_fp16(m, k, n, x, y, z, flag)
-            # print("total efficiency = ", sip_code_eff_ * sip_dma_eff_ * sip_leading_eff_)
+            #print("total efficiency = ", sip_code_eff_ * sip_dma_eff_ * sip_leading_eff_)
             adjusted_cycles_ = sip_cycles / sip_code_eff_ / sip_dma_eff_ / \
                                sip_leading_eff_
             if adjusted_cycles_ <= adjusted_cycles:
@@ -50,11 +50,11 @@ def sip_cycles_fp16(m, k, n, flag):
                 eff2 = sip_leading_eff_
                 adjusted_cycles = adjusted_cycles_
 
-    p0 = 80.0 * eff0
+    p0 = sip_base_power * eff0
     p1 = p0 * eff1
     p2 = p1 * eff2
     print('adjusted_sip_power = ', p2)
-    # print('efficiency = ', eff0 * eff1 * eff2)
+    print('efficiency = ', eff0 * eff1 * eff2)
 
     return [adjusted_cycles, [xx, yy, zz, eff0, p0, eff1, p1, eff2, p2]]
 

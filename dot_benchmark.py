@@ -15,6 +15,9 @@ from param_config import *
 def run(M, K, N, args):
     K_block = find_k(M, K, N, args)
     print('dynamic: block size = ', M, ' * ', K_block, '(', K, ')', ' * ', N)
+    if if_dynamic(M, N, K_block, args) == False:
+        print('dynamic: K_block < 500, error')
+        return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
     if K_block < 256:
         print('dynamic: K_block < 500, error')
         return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
@@ -41,12 +44,15 @@ def run(M, K, N, args):
         print("in1 = ", in1, " cycles")
         print("sip8 = ", sip8, " cycles")
         print("out = ", out, " cycles")
+        print("delay = ", delay, " cycles")
+        print('cqm = ', cqm, ' cycles')
         print("total cycles = ", cycles, " cycles")
 
     # find best pipeline solution
-    pipeline_rate1 = pipeline(in0, in1, sip8, delay, cqm, out, 0, 0, 1)
-    pipeline_rate2 = pipeline(in0, in1, sip8, delay, cqm, out, 0, 1, 0)
-    pipeline_rate3 = pipeline(in0, in1, sip8, delay, cqm, out, 1, 0, 0)
+    discount = cycles/max(in0, in1)
+    pipeline_rate1 = min(discount, pipeline(in0, in1, sip8, delay, cqm, out, 0, 0, 1))
+    pipeline_rate2 = min(discount, pipeline(in0, in1, sip8, delay, cqm, out, 0, 1, 0))
+    pipeline_rate3 = min(discount, pipeline(in0, in1, sip8, delay, cqm, out, 1, 0, 0))
     if (pipeline_rate3 >= pipeline_rate1)&(pipeline_rate3 >= pipeline_rate2):
             c1 = 1
             c2 = 0
@@ -104,12 +110,15 @@ def run_static(M, K, N, args):
         print("in1 = ", in1, " cycles")
         print("sip8 = ", sip8, " cycles")
         print("out = ", out, " cycles")
+        print("delay = ", delay, " cycles")
+        print('cqm = ', cqm, ' cycles')
         print("total cycles = ", cycles, " cycles")
 
     # find best pipeline solution
-    pipeline_rate1 = pipeline_static(in0, sip8, delay, cqm, out)
-    pipeline_rate2 = pipeline_static(in0, sip8, delay, cqm, out)
-    pipeline_rate3 = pipeline_static(in0, sip8, delay, cqm, out)
+    discount = cycles/in0
+    pipeline_rate1 = min(discount, pipeline_static(in0, sip8, delay, cqm, out))
+    pipeline_rate2 = min(discount, pipeline_static(in0, sip8, delay, cqm, out))
+    pipeline_rate3 = min(discount, pipeline_static(in0, sip8, delay, cqm, out))
     pipeline_rate = max(pipeline_rate1, max(pipeline_rate2, pipeline_rate3))
 
     # for conservation, pipeline real efficiency

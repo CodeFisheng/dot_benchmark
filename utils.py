@@ -6,6 +6,7 @@ def find_k(M, K, N, args):
     klen_fp16 = (cluster_buffer_size_limit - 2 * M * N * byte_size_fp16) / \
            (2 * byte_size_fp16 * M + 2 * byte_size_fp16 * N)
     klen_fp16 = int(klen_fp16)
+    print('full memory klen', klen_fp16)
     klen_fp32 = (cluster_buffer_size_limit - 2 * M * N * byte_size_fp32) / \
                 (2 * byte_size_fp32 * M + 2 * byte_size_fp32 * N)
     klen_fp32 = int(klen_fp32)
@@ -59,6 +60,7 @@ def if_static(M, N, K, args):
 def if_static_fp16(M, N, K):
     if M * K * 2 * byte_size_fp16 + N * K * byte_size_fp16 + 2 * M * N * byte_size_fp16 <\
             cluster_buffer_size_limit:
+        print('size = ', M * K * 2 * byte_size_fp16 + N * K * byte_size_fp16 + 2 * M * N * byte_size_fp16, ' limit = ', cluster_buffer_size_limit)
         return True
     else:
         return False
@@ -67,6 +69,7 @@ def if_static_fp16(M, N, K):
 def if_static_fp32(M, N, K):
     if M * K * 2 * byte_size_fp32 + N * K * byte_size_fp32 + 2 * M * N * byte_size_fp32 <\
             cluster_buffer_size_limit:
+        print('size = ', M * K * 2 * byte_size_fp16 + N * K * byte_size_fp16 + 2 * M * N * byte_size_fp16, ' limit = ', cluster_buffer_size_limit)
         return True
     else:
         return False
@@ -82,6 +85,7 @@ def if_dynamic(M, N, K, args):
 def if_dynamic_fp16(M, N, K):
     if M * K * 2 * byte_size_fp16 + N * K * 2 * byte_size_fp16 + 2 * M * N * \
             byte_size_fp16 < cluster_buffer_size_limit:
+        print('size = ', M * K * 2 * byte_size_fp16 + N * K * 2 * byte_size_fp16 + 2 * M * N * byte_size_fp16, ' limit = ', cluster_buffer_size_limit)
         return True
     else:
         return False
@@ -90,6 +94,7 @@ def if_dynamic_fp16(M, N, K):
 def if_dynamic_fp32(M, N, K):
     if M * K * 2 * byte_size_fp32 + N * K * 2 * byte_size_fp32 + 2 * M * N * \
             byte_size_fp32 < cluster_buffer_size_limit:
+        print('size = ', M * K * 2 * byte_size_fp16 + N * K * 2 * byte_size_fp16 + 2 * M * N * byte_size_fp16, ' limit = ', cluster_buffer_size_limit)
         return True
     else:
         return False
