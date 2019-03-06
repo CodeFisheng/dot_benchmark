@@ -95,15 +95,13 @@ def if_dynamic_fp32(M, N, K):
         return False
 
 
-def get_search_list(m, n):
+def get_cblock_search_list(m, n):
     tmp_m = min(m, 512)
     tmp_n = min(n, 512)
     m_unit = 128
     n_unit = 16
     m_times = int((tmp_m) / m_unit)
     n_times = int((tmp_n) / n_unit)
-    print(tmp_m)
-    print(tmp_n)
     m_list = [m_unit * (j+1) for j in range(m_times)]
     n_list = [n_unit * (j+1) for j in range(n_times)]
     if tmp_n == 8:
@@ -113,3 +111,25 @@ def get_search_list(m, n):
     if len(n_list) == 0:
         n_list.append(n)
     return m_list, n_list
+
+
+def get_sipblock_search_list(m, n):
+    tmp_m = min(m, 128 * mode_x)
+    tmp_n = min(n, 16 * mode_y)
+    m_unit = 128
+    n_unit = 16
+    m_times = int((tmp_m) / m_unit)
+    n_times = int((tmp_n) / n_unit)
+    m_list = [(j+1) for j in range(m_times)]
+    n_list = [(j+1) for j in range(n_times)]
+    if len(n_list) == 0:
+        n_list.append(n)
+    return m_list, n_list
+
+if __name__ == '__main__':
+    m_list, n_list = get_sipblock_search_list(384, 128)
+    print(m_list)
+    print(n_list)
+    m_list, n_list = get_cblock_search_list(384, 128)
+    print(m_list)
+    print(n_list)

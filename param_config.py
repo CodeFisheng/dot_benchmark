@@ -19,3 +19,5 @@ cluster_buffer_size_limit = 4*1024*1024 #bytes
 sip_base_eff = 1.0
 pipeline_efficiency = 1.0
 cdma_efficiency = 1.0
+mode_x = 4
+mode_y = 8

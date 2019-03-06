@@ -14,15 +14,19 @@ from param_config import *
 
 def run(M, K, N, args):
     K_block = find_k(M, K, N, args)
-    print('normal: block size = ', M, ' * ', K_block, '(', K, ')', ' * ', N)
+    print('dynamic: block size = ', M, ' * ', K_block, '(', K, ')', ' * ', N)
     if K_block < 256:
-        print('normal: K_block < 500, error')
-        return [0, 0, 0, 0, 0, 0]
+        print('dynamic: K_block < 500, error')
+        return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
     fp_cnt_block = 2 * M * N * K_block
     in0 = cdma_cycles(M, K_block, args)
     in1 = cdma_cycles(K_block, N, args)
     out = cdma_cycles(M, N, args)
-    sip8 = sip_cycles(M, K_block, N, args)
+    # if not static, n <= 128, 2x + y
+    if N > 128:
+        [sip8, ret_packet] = sip_cycles(M, K_block, N, args, 0)
+    else:
+        [sip8, ret_packet] = sip_cycles(M, K_block, N, args, 1)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + in1 + sip8 + delay + cqm + out
@@ -62,8 +66,10 @@ def run(M, K, N, args):
 
     # output results
     pipelined_total_cap = pipeline_rate * total_cap
-    print("normal: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap)
-    return [c1, c2, c3, pipeline_rate, pipelined_total_cap, K_block]
+    print("dynamic: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap,
+          '\n')
+
+    return [c1, c2, c3, pipeline_rate, pipelined_total_cap, K_block, ret_packet]
 
 def run_static(M, K, N, args):
     global time_space
@@ -77,12 +83,13 @@ def run_static(M, K, N, args):
     print('static: block size = ', M_block, ' * ', K_block, ' * ', N_block)
     if if_static(M_block, N_block, K_block, args) == False:
         print('static: block size > 4MB, error')
-        return [0, 0, 0, 0, 0, 0]
+        return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
     fp_cnt_block = 2 * M_block * K_block * N_block
     in0 = cdma_cycles(M, K_block, args)
     in1 = cdma_cycles(K_block, N, args)
     out = cdma_cycles(M, N, args)
-    sip8 = sip_cycles(M, K_block, N, args)
+    # if static, 2x + y
+    [sip8, ret_packet] = sip_cycles(M, K_block, N, args, 1)
     cqm = cqm_count() * cqm_cycles()
     delay = sip_delay_cycles()
     cycles = in0 + sip8 + delay + cqm + out
@@ -111,7 +118,8 @@ def run_static(M, K, N, args):
     # output results
     pipelined_total_cap = pipeline_rate * total_cap
     print("static: pipe = ", pipeline_rate, "; and power = ", pipelined_total_cap, '\n')
-    return [0, 0, 1, pipeline_rate, pipelined_total_cap, K_block]
+
+    return [0, 0, 1, pipeline_rate, pipelined_total_cap, K_block, ret_packet]
 
 
 def go(i, args):
@@ -125,22 +133,25 @@ def go(i, args):
     cc1 = -1
     cc2 = -1
     cc3 = -1
+    final_packet = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     # search for best slice strategy (m, n, k) in cbuffer
     # from hbm to cbuffer, use cdma method
-    [m_list, n_list] = get_search_list(i[0], i[1])
+    [m_list, n_list] = get_cblock_search_list(i[0], i[1])
     for mm in m_list:
         for nn in n_list:
             if if_static(mm, nn, i[2], args):
-                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run_static(mm, i[2], nn, args)
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] =\
+                    run_static(mm, i[2], nn, args)
                 f1orf2 = 1
             else:
-                [c1, c2, c3, pipe_tmp, cap_tmp, kk] = run(mm, i[2], nn, args)
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] =\
+                    run(mm, i[2], nn, args)
                 f1orf2 = 2
             if cap_tmp == 0:
                 break
             if cap_tmp > cap:
-                #print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                # print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
                 global_f = f1orf2
                 pipe = pipe_tmp
                 cap = cap_tmp
@@ -150,9 +161,11 @@ def go(i, args):
                 m_ = mm
                 n_ = nn
                 k_ = kk
-    print(" **** normal using F", f1orf2, ": final cap = ", cap, "final pipe = ", pipe)
+                final_packet = ret_packet
+    print(" **** dynamic using F", f1orf2, ": final cap = ", cap, "final pipe = ", pipe)
     if cap == 0:
         method = 'Fail'
+        print('hehehehe')
     else:
         # check if need padding from size 8 to size 16
         if i[1] == 8:
@@ -161,13 +174,15 @@ def go(i, args):
         # check which method was used
         if global_f == 1:
             method = 'F1'
-            print('m = ', m_, 'k_', k_, 'n_', n_)
+            print('m_ =', m_, 'k_ =', k_, 'n_ =', n_)
         else:
             method = 'F2'
-            print('m = ', m_, 'k_', k_, 'n_', n_)
+            print('m_ =', m_, 'k_ =', k_, 'n_ =', n_)
     # pack output
-    ret = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, method, \
-            pipe, i[4], cap]
+    ret = [i[5], i[0], i[2], i[1], m_, k_, n_, cc1, cc2, cc3, method,
+           pipe, i[4], cap, final_packet[0], final_packet[1], final_packet[2],
+           final_packet[3], final_packet[4], final_packet[5], final_packet[6],
+           final_packet[7], final_packet[8]]
     return ret
 
 
@@ -196,12 +211,27 @@ if __name__ == "__main__":
             tmp = []
             print('size = ', i[0], ' * ', i[2], ' * ', i[1])
             tmp = go(i, args)
-            result.append(tmp)
+            if (tmp[13] != 0):
+                result.append(tmp)
             if args.dtype == 0:
-                pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_fp16.csv', \
-                                            header = 1, index = 0)
+                pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp16.csv', \
+                                            header = ['Case', 'M', 'K', 'N', 'm', 'k',
+                                                      'n', 'in0', 'in1', 'out',
+                                                      'method', 'pipeline',
+                                                      'NV baseline', 'final power',
+                                                      'sip mode x', 'sip mode y',
+                                                      'sip mode z', 'eff0', 'power0',
+                                                      'eff1', 'power1', 'eff2', 'power2'],
+                                            index = 0)
             else:
-                pd.DataFrame(result).to_csv('./res_norm/DeepBench_enflame_fp32.csv', \
-                                            header = 1, index = 0)
+                pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp32.csv', \
+                                            header = ['Case', 'M', 'K', 'N', 'm', 'k',
+                                                      'n', 'in0', 'in1', 'out',
+                                                      'method', 'pipeline',
+                                                      'NV baseline', 'final power',
+                                                      'sip mode x', 'sip mode y',
+                                                      'sip mode z', 'eff0', 'power0',
+                                                      'eff1', 'power1', 'eff2', 'power2'],
+                                            index = 0)
     time2 = time.time()
     print('time = ', time2 - time1)
