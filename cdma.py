@@ -4,6 +4,11 @@ from param_config import *
 cdma_linear_rate_ref = (M_ref * K_ref * byte_size_ref)/13564 #cycles/bytes
 cdma_speed_ref = 1/cdma_linear_rate_ref
 
+def cdma_cycles_reshape(x, y, args):
+    if args.dtype == 0:
+        return ns.cdma_reshape_eff * cdma_cycles_fp16(x, y)
+    elif args.dtype == 1:
+        return ns.cdma_reshape_eff * cdma_cycles_fp32(x, y)
 
 def cdma_cycles(x, y, args):
     if args.dtype == 0:

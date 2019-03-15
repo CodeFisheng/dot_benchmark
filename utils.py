@@ -103,28 +103,37 @@ def if_dynamic_fp32(M, N, K):
 def get_cblock_search_list(m, n):
     tmp_m = min(m, 512)
     tmp_n = min(n, 512)
-    m_unit = 128
-    n_unit = 16
-    m_times = int((tmp_m) / m_unit)
-    n_times = int((tmp_n) / n_unit)
-    m_list = [m_unit * (j+1) for j in range(m_times)]
-    n_list = [n_unit * (j+1) for j in range(n_times)]
-    if tmp_n == 8:
-        n_list = [16]
-    if tmp_m == 8:
-        m_list = [16]
+    m_times = int((tmp_m) / ns.m_unit)
+    n_times = int((tmp_n) / ns.n_unit)
+    m_list = [ns.m_unit * (j+1) for j in range(m_times)]
+    n_list = [ns.n_unit * (j+1) for j in range(n_times)]
+    if tmp_n < ns.n_unit:
+        n_list = [ns.n_unit]
+    if tmp_m < ns.m_unit:
+        m_list = [ns.m_unit]
     if len(n_list) == 0:
         n_list.append(n)
     return m_list, n_list
 
+# def get_sipblock_search_list(m, n):
+#     tmp_m = min(m, 128 * mode_x)
+#     tmp_n = min(n, 16 * mode_y)
+#     m_unit = 128
+#     n_unit = 16
+#     m_times = int((tmp_m) / m_unit)
+#     n_times = int((tmp_n) / n_unit)
+#     m_list = [(j+1) for j in range(m_times)]
+#     n_list = [(j+1) for j in range(n_times)]
+#     if len(n_list) == 0:
+#         n_list.append(n)
+#     return m_list, n_list
+
 
 def get_sipblock_search_list(m, n):
-    tmp_m = min(m, 128 * mode_x)
-    tmp_n = min(n, 16 * mode_y)
-    m_unit = 128
-    n_unit = 16
-    m_times = int((tmp_m) / m_unit)
-    n_times = int((tmp_n) / n_unit)
+    tmp_m = min(m, ns.m_unit * mode_x)
+    tmp_n = min(n, ns.n_unit * mode_y)
+    m_times = int((tmp_m) / ns.m_unit)
+    n_times = int((tmp_n) / ns.n_unit)
     m_list = [(j+1) for j in range(m_times)]
     n_list = [(j+1) for j in range(n_times)]
     if len(n_list) == 0:
@@ -132,9 +141,20 @@ def get_sipblock_search_list(m, n):
     return m_list, n_list
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dtype', default=0, type=int)
+    args = parser.parse_args()
+    m = 128
+    k = 1760
+    n = 16
+    args.dtype = 0
+    print(find_k(m, k, n, args))
     m_list, n_list = get_sipblock_search_list(384, 128)
     print(m_list)
     print(n_list)
     m_list, n_list = get_cblock_search_list(384, 128)
     print(m_list)
     print(n_list)
+
+    print(if_static_fp16(448, 128, 1760))

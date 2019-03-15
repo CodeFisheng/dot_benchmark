@@ -11,6 +11,7 @@ from param_config import *
 # TODO: all in one method, follow leo's ppt
 # for scenario 1, in1 + in0_block + output can be put in cbuffer
 
+# global reshape_bandwidth, cdma_reshape_eff, m_unit, n_unit
 
 def run(M, K, N, args):
     K_block = find_k(M, K, N, args)
@@ -22,7 +23,7 @@ def run(M, K, N, args):
         print('dynamic: K_block < 500, error')
         return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
     fp_cnt_block = 2 * M * N * K_block
-    in0 = cdma_cycles(M, K_block, args)
+    in0 = cdma_cycles_reshape(M, K_block, args)
     in1 = cdma_cycles(K_block, N, args)
     out = cdma_cycles(M, N, args)
     # if not static, n <= 128, 2x + y
@@ -91,7 +92,7 @@ def run_static(M, K, N, args):
         print('static: block size > 4MB, error')
         return [0, 0, 0, 0, 0, 0, [0, 0, 0, 0, 0, 0, 0, 0, 0]]
     fp_cnt_block = 2 * M_block * K_block * N_block
-    in0 = cdma_cycles(M, K_block, args)
+    in0 = cdma_cycles_reshape(M, K_block, args)
     in1 = cdma_cycles(K_block, N, args)
     out = cdma_cycles(M, N, args)
     # if static, 2x + y
@@ -137,30 +138,51 @@ def go(i, args):
     m_ = 0
     n_ = 0
     k_ = 0
-    f1orf2 = 1
     global_f = 0
     cc1 = -1
     cc2 = -1
     cc3 = -1
     final_packet = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+    pipe2 = 0
+    cap2 = 0
+    m_2 = 0
+    n_2 = 0
+    k_2 = 0
+    global_f2 = 0
+    cc12 = -1
+    cc22 = -1
+    cc32 = -1
+    final_packet2 = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+    if_new_strategy = False
+    f1orf2 = 1
+
     # search for best slice strategy (m, n, k) in cbuffer
     # from hbm to cbuffer, use cdma method
     [m_list, n_list] = get_cblock_search_list(i[0], i[1])
     for mm in m_list:
         for nn in n_list:
+            # round 1
+            set_strategy1()
             if if_static(mm, nn, i[2], args):
                 [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] =\
                     run_static(mm, i[2], nn, args)
                 f1orf2 = 1
+                print('hahahah')
+                print(f1orf2)
             else:
                 [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] =\
                     run(mm, i[2], nn, args)
                 f1orf2 = 2
             if cap_tmp == 0:
                 break
-            if cap_tmp > cap:
+            # check if need padding from size 8 to size 16
+            if i[1] < ns.n_unit:
+                cap_tmp /= (ns.n_unit/i[1])
+            if cap_tmp >= cap:
                 # print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                print('anchor', f1orf2)
                 global_f = f1orf2
                 pipe = pipe_tmp
                 cap = cap_tmp
@@ -171,14 +193,54 @@ def go(i, args):
                 n_ = nn
                 k_ = kk
                 final_packet = ret_packet
-    print(" **** dynamic using F", f1orf2, ": final cap = ", cap, "final pipe = ", pipe)
+            # round 2
+            set_strategy2()
+            if if_static(mm, nn, i[2], args):
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] = \
+                    run_static(mm, i[2], nn, args)
+                f1orf2 = 1
+            else:
+                [c1, c2, c3, pipe_tmp, cap_tmp, kk, ret_packet] = \
+                    run(mm, i[2], nn, args)
+                f1orf2 = 2
+            if cap_tmp == 0:
+                break
+            if i[1] < ns.n_unit:
+                cap_tmp /= (ns.n_unit/i[1])
+            if cap_tmp > cap:
+                print("new cap = ", cap_tmp, "new pipe = ", pipe_tmp)
+                global_f2 = f1orf2
+                pipe2 = pipe_tmp
+                cap2 = cap_tmp
+                print(cap2)
+                cc12 = c1
+                cc22 = c2
+                cc32 = c3
+                m_2 = mm
+                n_2 = nn
+                k_2 = kk
+                final_packet2 = ret_packet
+            #
+            if cap2 > cap:
+                global_f = global_f2
+                pipe = pipe2
+                cap = cap2
+                cc1 = cc12
+                cc2 = cc22
+                cc3 = cc32
+                m_ = m_2
+                n_ = n_2
+                k_ = k_2
+                final_packet = final_packet2
+                if_new_strategy = True
+
+    print(" **** if use new strategy = ", if_new_strategy, "; dynamic using F", global_f,
+          "; final cap = ", cap,
+          "final pipe = ", pipe)
     if cap == 0:
         method = 'Fail'
         print('hehehehe')
     else:
-        # check if need padding from size 8 to size 16
-        if i[1] == 8:
-            cap /= 2
 
         # check which method was used
         if global_f == 1:
@@ -202,12 +264,13 @@ if __name__ == "__main__":
     parser.add_argument("--m", type = int)
     parser.add_argument("--n", type = int)
     parser.add_argument("--k", type = int)
-    parser.add_argument("--dtype", type = int) # fp32: 1, fp16: 0
+    parser.add_argument("--dtype", default=0, type = int) # fp32: 1, fp16: 0
     args = parser.parse_args()
     # dataset = np.array(pd.read_csv('DeepBench_NV_V100_mini.csv'))
     dataset = np.array(pd.read_csv('./input/DeepBench_NV_V100.csv'))
     result = []
     time1 = time.time()
+    set_strategy2()
 
     # dispatch to different input sources
     if args.data == 1:
@@ -223,6 +286,9 @@ if __name__ == "__main__":
             if (tmp[13] != 0):
                 result.append(tmp)
             if args.dtype == 0:
+                # pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp16_cdma(' +
+                #                             str(ns.reshape_bandwidth) + ').csv', \
+                # temporarilly, use two strategy to compare
                 pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp16.csv', \
                                             header = ['Case', 'M', 'K', 'N', 'm', 'k',
                                                       'n', 'in0', 'in1', 'out',
@@ -233,7 +299,8 @@ if __name__ == "__main__":
                                                       'eff1', 'power1', 'eff2', 'power2'],
                                             index = 0)
             else:
-                pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp32.csv', \
+                pd.DataFrame(result).to_csv('./output/DeepBench_enflame_fp32_cdma(' +
+                                            str(ns.reshape_bandwidth) + ').csv', \
                                             header = ['Case', 'M', 'K', 'N', 'm', 'k',
                                                       'n', 'in0', 'in1', 'out',
                                                       'method', 'pipeline',
